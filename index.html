@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SCRP_SUBSTRUCTURE</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+    <header>
+        <h1>SCRP_SUBSTRUCTURE - Equipment Management</h1>
+        <nav>
+            <ul>
+                <li><a href="#dashboard">Dashboard</a></li>
+                <li><a href="#equipment-list">Equipment List</a></li>
+                <li><a href="#admin">Admin</a></li>
+            </ul>
+        </nav>
+    </header>
+
+    <main>
+        <section id="dashboard" class="content-section">
+            <h2>Dashboard</h2>
+            <div class="dashboard-grid">
+                <div class="card equipment-overview">
+                    <h3>Equipment Status Overview</h3>
+                    <p>Total: <span id="total-equipment" class="metric">0</span></p>
+                    <p class="status operating">Operating: <span id="operating-equipment">0</span></p>
+                    <p class="status maintenance">Maintenance: <span id="maintenance-equipment">0</span></p>
+                    <p class="status idle">Idle: <span id="idle-equipment">0</span></p>
+                    <div class="chart-container">
+                        <canvas id="equipmentStatusChart"></canvas>
+                    </div>
+                </div>
+
+                <div class="card operator-overview">
+                    <h3>Operator Status Overview</h3>
+                    <p>Total: <span id="total-operators" class="metric">0</span></p>
+                    <p class="status available">Available: <span id="available-operators">0</span></p>
+                    <p class="status on-duty">On Duty: <span id="on-duty-operators">0</span></p>
+                    <p class="status off-duty">Off Duty: <span id="off-duty-operators">0</span></p>
+                    <div class="chart-container">
+                        <canvas id="operatorStatusChart"></canvas>
+                    </div>
+                </div>
+
+                <div class="card package-table-overview full-width">
+                    <h3>Package-wise Equipment Status</h3>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Package Name</th>
+                                <th>Status</th>
+                                <th>Progress</th>
+                                <th>Equipment Count</th>
+                                <th>Operator Count</th>
+                            </tr>
+                        </thead>
+                        <tbody id="package-status-table-body">
+                            <!-- Package data will be loaded here by JavaScript -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <section id="equipment-list" class="content-section">
+            <h2>Equipment List</h2>
+            <div class="equipment-controls">
+                <label for="equipment-type-filter">Filter by Type:</label>
+                <select id="equipment-type-filter">
+                    <option value="all">All Types</option>
+                </select>
+            </div>
+            <div class="equipment-table">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Equipment Type</th>
+                            <th>Equipment Name</th>
+                            <th>Status</th>
+                            <th>Remarks</th>
+                            <th>Location</th>
+                            <th>Pier No.</th>
+                        </tr>
+                    </thead>
+                    <tbody id="equipment-list-body">
+                        <!-- Equipment data will be loaded here by JavaScript -->
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <section id="admin" class="content-section">
+            <h2>Admin</h2>
+            <div class="admin-panel">
+                <h3>Add New Equipment</h3>
+                <form id="add-equipment-form">
+                    <label for="add-eq-type-select">Equipment Type:</label>
+                    <select id="add-eq-type-select" name="add-eq-type-select" required>
+                        <option value="">--Select Type--</option>
+                        <option value="AIR COMPRESSOR">AIR COMPRESSOR</option>
+                        <option value="BOOM TRUCK">BOOM TRUCK</option>
+                        <option value="CONCRETE PUMP CAR">CONCRETE PUMP CAR</option>
+                        <option value="FORKLIFT">FORKLIFT</option>
+                        <option value="GENSET">GENSET</option>
+                        <option value="HYDRO CRANE">HYDRO CRANE</option>
+                        <option value="MANLIFT">MANLIFT</option>
+                        <option value="TRAILER (FLATBED)">TRAILER (FLATBED)</option>
+                        <option value="TOWER LIGHT">TOWER LIGHT</option>
+                    </select><br><br>
+                    <label for="eq-name">Equipment Name:</label>
+                    <input type="text" id="eq-name" name="eq-name" required><br><br>
+                    <label for="eq-status">Status:</label>
+                    <select id="eq-status" name="eq-status" required>
+                        <option value="">--Select Status--</option>
+                        <option value="ACTIVE">ACTIVE</option>
+                        <option value="BREAKDOWN">BREAKDOWN</option>
+                        <option value="IDLE">IDLE</option>
+                    </select><br><br>
+                    <label for="eq-remarks">Remarks:</label>
+                    <textarea id="eq-remarks" name="eq-remarks"></textarea><br><br>
+                    <label for="eq-location-select">Location:</label>
+                    <select id="eq-location-select" name="eq-location-select" required>
+                        <option value="">--Select Location--</option>
+                        <option value="PKG 4">PKG 4</option>
+                        <option value="PKG 5">PKG 5</option>
+                        <option value="PKG 6">PKG 6</option>
+                        <option value="Site A">Site A</option>
+                        <option value="Site B">Site B</option>
+                        <option value="Site C">Site C</option>
+                        <option value="Warehouse">Warehouse</option>
+                        <option value="Workshop">Workshop</option>
+                    </select><br><br>
+                    <label for="eq-pier-no">Pier No.:</label>
+                    <input type="text" id="eq-pier-no" name="eq-pier-no"><br><br>
+                    <button type="submit">Add Equipment</button>
+                </form>
+
+                <h3>Remove Equipment</h3>
+                <form id="remove-equipment-form">
+                    <label for="remove-eq-select">Equipment to Remove:</label>
+                    <select id="remove-eq-select" name="remove-eq-select" required>
+                        <option value="">--Select Equipment--</option>
+                    </select><br><br>
+                    <button type="submit">Remove Equipment</button>
+                </form>
+            </div>
+        </section>
+    </main>
+
+    <script src="script.js"></script>
+</body>
+</html>
