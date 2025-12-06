@@ -294,4 +294,172 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Populate equipment type filter dropdown
     populateEquipmentTypeFilter();
+
+    // Firebase 구성 (본인의 프로젝트 설정으로 교체하세요!)
+    const firebaseConfig = {
+        apiKey: "AIzaSyCMQgkMmDH2JN4QltFZS-LctTr4uIg5NJA",
+        authDomain: "test-8556c.firebaseapp.com",
+        projectId: "test-8556c",
+        storageBucket: "test-8556c.firebasestorage.app",
+        messagingSenderId: "782289495506",
+        appId: "1:782289495506:web:fdd6599e7d694ff4e4140b",
+        measurementId: "G-4ECE66M7XT"
+    };
+
+    // Firebase 초기화
+    firebase.initializeApp(firebaseConfig);
+
+    const auth = firebase.auth();
+    const db = firebase.firestore();
+
+    // DOM 요소 참조
+    const userStatusElement = document.getElementById('user-status');
+    const loginButton = document.getElementById('login-button');
+    const logoutButton = document.getElementById('logout-button');
+    const todoFormSection = document.getElementById('todo-form-section'); // 이제 항상 표시됩니다.
+    const newTodoInput = document.getElementById('new-todo-input');
+    const addTodoButton = document.getElementById('add-todo-button');
+    const todoList = document.getElementById('todo-list');
+
+    let unsubscribeFromTodos = null; // 실시간 업데이트 구독을 위한 변수
+
+    // --- 인증 관련 함수 ---
+    // Google 로그인
+    loginButton.addEventListener('click', async () => {
+        const provider = new firebase.auth.GoogleAuthProvider();
+        try {
+            await auth.signInWithPopup(provider);
+        } catch (error) {
+            console.error("Google 로그인 오류:", error);
+            alert("로그인 중 오류가 발생했습니다.");
+        }
+    });
+
+    // 로그아웃
+    logoutButton.addEventListener('click', async () => {
+        try {
+            await auth.signOut();
+        } catch (error) {
+            console.error("로그아웃 오류:", error);
+            alert("로그아웃 중 오류가 발생했습니다.");
+        }
+    });
+
+    // 인증 상태 변화 감지
+    auth.onAuthStateChanged(user => {
+        if (user) {
+            // 사용자 로그인됨
+            userStatusElement.textContent = `환영합니다, ${user.displayName || user.email}!`;
+            loginButton.style.display = 'none';
+            logoutButton.style.display = 'inline-block';
+            // todoFormSection은 HTML에서 display: none;이 제거되어 항상 표시됩니다.
+            loadUserTodos(user.uid); // 로그인하면 할 일 목록 로드
+        } else {
+            // 사용자 로그아웃됨
+            userStatusElement.textContent = '로그인하지 않음';
+            loginButton.style.display = 'inline-block';
+            logoutButton.style.display = 'none';
+            // todoFormSection은 HTML에서 display: none;이 제거되어 항상 표시됩니다.
+            todoList.innerHTML = ''; // 할 일 목록 비우기 (비로그인 사용자는 자신의 목록이 없으므로)
+            if (unsubscribeFromTodos) {
+                unsubscribeFromTodos(); // 구독 해제
+                unsubscribeFromTodos = null;
+            }
+        }
+    });
+
+    // --- Firestore 할 일 관리 함수 ---
+
+    // 할 일 추가
+    addTodoButton.addEventListener('click', async () => {
+        const todoText = newTodoInput.value.trim();
+        const user = auth.currentUser; // 현재 사용자 정보 (로그인되어 있지 않으면 null)
+
+        if (todoText) {
+            try {
+                await db.collection('todos').add({
+                    text: todoText,
+                    completed: false,
+                    userId: user ? user.uid : null, // 로그인되어 있으면 UID, 아니면 null (누구나 추가 가능)
+                    createdAt: firebase.firestore.FieldValue.serverTimestamp()
+                });
+                newTodoInput.value = ''; // 입력 필드 초기화
+            } catch (error) {
+                console.error("할 일 추가 오류:", error);
+                alert("할 일 추가에 실패했습니다. 규칙을 확인하세요.");
+            }
+        } else {
+            alert("할 일 내용을 입력해주세요.");
+        }
+    });
+
+    // 사용자의 할 일 목록을 실시간으로 로드 (로그인된 사용자만 해당)
+    function loadUserTodos(uid) {
+        if (unsubscribeFromTodos) {
+            unsubscribeFromTodos(); // 이전 구독 해제
+        }
+
+        // 현재 사용자의 할 일만 필터링하여 실시간 업데이트를 구독
+        unsubscribeFromTodos = db.collection('todos')
+            .where('userId', '==', uid) // 중요: 현재 사용자의 할 일만 가져옴
+            .orderBy('createdAt', 'desc')
+            .onSnapshot(snapshot => {
+                todoList.innerHTML = ''; // 기존 목록 초기화
+                snapshot.forEach(doc => {
+                    const todo = doc.data();
+                    const li = document.createElement('li');
+                    li.dataset.id = doc.id;
+                    li.className = todo.completed ? 'completed' : '';
+
+                    li.innerHTML = `
+                        <span>${todo.text}</span>
+                        <div class="actions">
+                            <button class="complete-button">${todo.completed ? '미완료' : '완료'}</button>
+                            <button class="delete-button">삭제</button>
+                        </div>
+                    `;
+                    todoList.appendChild(li);
+                });
+            }, error => {
+                console.error("할 일 목록 로드 오류:", error);
+                alert("할 일 목록을 불러오는 데 실패했습니다. 규칙을 확인하세요.");
+            });
+    }
+
+    // 할 일 완료/미완료 토글 및 삭제
+    todoList.addEventListener('click', async (event) => {
+        const li = event.target.closest('li');
+        if (!li) return;
+
+        const todoId = li.dataset.id;
+        const user = auth.currentUser;
+
+        if (!user) {
+            alert("이 작업을 수행하려면 로그인해야 합니다.");
+            return;
+        }
+
+        if (event.target.classList.contains('complete-button')) {
+            // 할 일 완료 상태 토글
+            const currentCompleted = li.classList.contains('completed');
+            try {
+                await db.collection('todos').doc(todoId).update({
+                    completed: !currentCompleted
+                });
+            } catch (error) {
+                console.error("할 일 상태 업데이트 오류:", error);
+                alert("할 일 상태 업데이트에 실패했습니다. 규칙을 확인하세요.");
+            }
+        } else if (event.target.classList.contains('delete-button')) {
+            // 할 일 삭제
+            if (confirm("정말로 이 할 일을 삭제하시겠습니까?")) {
+                try {
+                    await db.collection('todos').doc(todoId).delete();
+                } catch (error) {
+                    console.error("할 일 삭제 오류:", error);
+                    alert("할 일 삭제에 실패했습니다. 규칙을 확인하세요.");
+                }
+            }
+        }
+    });
 });
