@@ -6,6 +6,9 @@
     <title>SCRP_SUBSTRUCTURE</title>
     <link rel="stylesheet" href="style.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.9.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.9.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.9.0/firebase-firestore-compat.js"></script>
 </head>
 <body>
     <header>
@@ -15,6 +18,7 @@
                 <li><a href="#dashboard">Dashboard</a></li>
                 <li><a href="#equipment-list">Equipment List</a></li>
                 <li><a href="#admin">Admin</a></li>
+                <li><a href="#todo-list-section">Todo List</a></li>
             </ul>
         </nav>
     </header>
@@ -149,6 +153,25 @@
             </div>
         </section>
     </main>
+
+    <section id="todo-list-section" class="content-section">
+        <h2>나의 할 일 목록</h2>
+
+        <div id="auth-section">
+            <p id="user-status">로그인하지 않음</p>
+            <button id="login-button">Google로 로그인</button>
+            <button id="logout-button" style="display: none;">로그아웃</button>
+        </div>
+
+        <div id="todo-form-section">
+            <input type="text" id="new-todo-input" placeholder="새 할 일 추가">
+            <button id="add-todo-button">추가</button>
+        </div>
+
+        <ul id="todo-list">
+            <!-- 할 일 목록이 여기에 표시됩니다 -->
+        </ul>
+    </section>
 
     <script src="script.js"></script>
 </body>
